@@ -29,16 +29,29 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.TextView;
 
 public class ScheduleMainActivity extends FragmentActivity {
 
-    public static int totalPages;
-
+    private static int totalPages;
     private static ScheduleItem[][] data;
-
-    /*
-     * Parsing JSON to get the Schedule Information's
+    /**
+     * The pager widget, which handles animation and allows swiping horizontally
+     * to access previous and next wizard steps.
      */
+    private ViewPager mPager;
+
+    /**
+     * The pager adapter, which provides the pages to the view pager widget.
+     */
+    private PagerAdapter mPagerAdapter;
+
+    private ImageButton ibLeft;
+    private ImageButton ibRight;
+
+    /*  Parsing JSON to get the Schedule information */
     private void getJsonData() {
         try {
             InputStream inStream = this.getResources().openRawResource(R.raw.program);
@@ -60,8 +73,6 @@ public class ScheduleMainActivity extends FragmentActivity {
 
                     JSONObject getJSonObj = (JSONObject)getFirstArray.get(i);
                     String time = getJSonObj.getString("time");
-                    Log.e("Time Log",time);
-                    String type = getJSonObj.getString("type");
                     String title = getJSonObj.getString("title");
                     int typeId = getJSonObj.getInt("type_id");
 
@@ -104,17 +115,6 @@ public class ScheduleMainActivity extends FragmentActivity {
         }
     }
 
-  
-    /**
-     * The pager widget, which handles animation and allows swiping horizontally
-     * to access previous and next wizard steps.
-     */
-    private ViewPager mPager;
-
-    /**
-     * The pager adapter, which provides the pages to the view pager widget.
-     */
-    private PagerAdapter mPagerAdapter;
 
     @Override
     public void onBackPressed() {
@@ -125,11 +125,32 @@ public class ScheduleMainActivity extends FragmentActivity {
         }
     }
 
+    public void updatePageDate(int position) {
+        TextView dayView = ((TextView)findViewById(R.id.tvDay));
+        dayView.setText(data[position][0].getDate());
+    }
+
+    public void updatePageButtons(int pageNumber) {
+        if (pageNumber == 0)
+            ibLeft.setVisibility(View.INVISIBLE);
+        else
+            ibLeft.setVisibility(View.VISIBLE);
+
+        if (pageNumber + 1 == totalPages)
+            ibRight.setVisibility(View.INVISIBLE);
+        else
+            ibRight.setVisibility(View.VISIBLE);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_screen_slide);
         getJsonData();
+
+        ibLeft = (ImageButton) findViewById(R.id.ibLeft);
+        ibRight = (ImageButton) findViewById(R.id.ibRight);
+
         mPager = (ViewPager)findViewById(R.id.pager);
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
@@ -137,14 +158,32 @@ public class ScheduleMainActivity extends FragmentActivity {
             @Override
             public void onPageSelected(int position) {
                 supportInvalidateOptionsMenu();
+                updatePageDate(position);
+                updatePageButtons(position);
+            }
+        });
+
+        updatePageDate(0);
+        updatePageButtons(0);
+
+        ibLeft.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mPager.getCurrentItem() > 0)
+                    mPager.setCurrentItem(mPager.getCurrentItem() - 1, true);
+            }
+        });
+
+        ibRight.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mPager.getCurrentItem() < totalPages)
+                    mPager.setCurrentItem(mPager.getCurrentItem() + 1, true);
             }
         });
     }
 
-    /**
-     * A simple pager adapter that represents ScreenSlidePageFragment objects,
-     * in sequence.
-     */
+
     private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
         public ScreenSlidePagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
@@ -152,7 +191,7 @@ public class ScheduleMainActivity extends FragmentActivity {
 
         @Override
         public Fragment getItem(int position) {
-            return ScheduleSlideFragment.create(position, mPager, data[position]);
+            return ScheduleSlideFragment.create(data[position]);
         }
 
         @Override

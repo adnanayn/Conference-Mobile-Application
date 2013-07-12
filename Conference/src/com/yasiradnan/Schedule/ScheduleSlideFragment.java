@@ -41,22 +41,14 @@ import android.widget.TextView;
 
 public class ScheduleSlideFragment extends Fragment {
 
-    final static String ARG_PAGE = "page";
     final static String ARG_DATA = "data";
 
-    private static ViewPager pager;
-    private int pageNumber;
     private ScheduleItem[] ScheduleInformation;
-
-    final static int totalPages = ScheduleMainActivity.totalPages;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         ViewGroup rootView = (ViewGroup)inflater.inflate(R.layout.schedule, container, false);
-        /**
-         * Set header date 
-         */
-        ((TextView)rootView.findViewById(R.id.tvDay)).setText(ScheduleInformation[pageNumber].getDate().toString());
+
         final ListView list = (ListView)rootView.findViewById(R.id.list);
         BinderData bindingData = new BinderData(this.getActivity(), ScheduleInformation);
         list.setAdapter(bindingData);
@@ -77,44 +69,13 @@ public class ScheduleSlideFragment extends Fragment {
             }
         });
 
-        ImageButton ibLeft = (ImageButton)rootView.findViewById(R.id.ibLeft);
-        if (pageNumber == 0)
-            ibLeft.setVisibility(View.INVISIBLE);
-
-        else
-            ibLeft.setVisibility(View.VISIBLE);
-
-        ibLeft.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (pager.getCurrentItem() > 0)
-                    pager.setCurrentItem(pager.getCurrentItem() - 1, true);
-            }
-        });
-
-        ImageButton ibRight = (ImageButton)rootView.findViewById(R.id.ibRight);
-        if (pageNumber + 1 == totalPages)
-            ibRight.setVisibility(View.INVISIBLE);
-        else
-            ibRight.setVisibility(View.VISIBLE);
-
-        ibRight.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (pager.getCurrentItem() < totalPages)
-                    pager.setCurrentItem(pager.getCurrentItem() + 1, true);
-            }
-        });
-
         return rootView;
     }
 
-    public static Fragment create(int position, ViewPager _pager, ScheduleItem[] data) {
-        pager = _pager;
+    public static Fragment create(ScheduleItem[] data) {
 
         Fragment fragment = new ScheduleSlideFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_PAGE, position);
         args.putSerializable(ARG_DATA, data);
         fragment.setArguments(args);
 
@@ -125,7 +86,6 @@ public class ScheduleSlideFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         Log.i("schedule", "onCreate()");
         super.onCreate(savedInstanceState);
-        pageNumber = getArguments().getInt(ARG_PAGE);
         Serializable serializable = getArguments().getSerializable(ARG_DATA);
         ScheduleInformation = (ScheduleItem[]) serializable;
     }

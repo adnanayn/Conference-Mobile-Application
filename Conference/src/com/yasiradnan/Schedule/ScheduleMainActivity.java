@@ -9,6 +9,7 @@
 package com.yasiradnan.Schedule;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import com.yasiradnan.conference.R;
+import com.yasiradnan.utils.JSONReader;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -32,30 +34,29 @@ public class ScheduleMainActivity extends FragmentActivity {
 
     public static int totalPages;
 
-    private static List<ScheduleItem>[] data = (ArrayList<ScheduleItem>[])new ArrayList[30];
+    private static ScheduleItem[][] data;
 
     /*
      * Parsing JSON to get the Schedule Information's
      */
     private void getJsonData() {
         try {
-            BufferedReader jsonReader = new BufferedReader(new InputStreamReader(this
-                    .getResources().openRawResource(R.raw.program)));
-            StringBuilder jsonBuilder = new StringBuilder();
-            for (String line = null; (line = jsonReader.readLine()) != null;) {
-                jsonBuilder.append(line).append("\n");
-            }
-            JSONTokener tokener = new JSONTokener(jsonBuilder.toString());
-            JSONArray jsonArray = new JSONArray(tokener);
+            InputStream inStream = this.getResources().openRawResource(R.raw.program);
+            JSONArray jsonArray = JSONReader.parseStream(inStream);
+
             totalPages = jsonArray.length();
+            data = new ScheduleItem[totalPages][];
+
             for (int counter = 0; counter < jsonArray.length(); counter++) {
-                
-                data[counter] = new ArrayList<ScheduleItem>();
                 JSONObject jsonObject = jsonArray.getJSONObject(counter);
                 String getDate = jsonObject.getString("date");
                 JSONArray getFirstArray = new JSONArray(jsonObject.getString("events"));
 
-                for (int i = 0; i < getFirstArray.length(); i++) {
+                int itemsCount = getFirstArray.length();
+
+                ArrayList<ScheduleItem> items = new ArrayList<ScheduleItem>();
+
+                for (int i = 0; i < itemsCount; i++) {
 
                     JSONObject getJSonObj = (JSONObject)getFirstArray.get(i);
                     String time = getJSonObj.getString("time");
@@ -64,11 +65,9 @@ public class ScheduleMainActivity extends FragmentActivity {
                     String title = getJSonObj.getString("title");
                     int typeId = getJSonObj.getInt("type_id");
 
-                    data[counter].add(new ScheduleItem(time, title, typeId, getDate));
+                    items.add(new ScheduleItem(time, title, typeId, getDate));
 
-                    /*
-                     * Get Events
-                     */
+                    /* a session entry contains multiple sub events */
                     if (typeId == 0) {
 
                         JSONArray getEventsArray = new JSONArray(getJSonObj.getString("events"));
@@ -81,22 +80,22 @@ public class ScheduleMainActivity extends FragmentActivity {
                             if (typeEventId == 1) {
 
                                 String EventInfo = getJSonEventobj.getString("info");
-                                String EventType = getJSonEventobj.getString("type");
                                 String EventTitle = getJSonEventobj.getString("title");
                                 String Eventtime = getJSonEventobj.getString("time");
-                                data[counter].add(new ScheduleItem(Eventtime, EventTitle,
+                                items.add(new ScheduleItem(Eventtime, EventTitle,
                                         EventInfo, typeEventId, getDate));
                             } else {
 
-                                String EventType = getJSonEventobj.getString("type");
                                 String EventTitle = getJSonEventobj.getString("title");
                                 String Eventtime = getJSonEventobj.getString("time");
-                                data[counter].add(new ScheduleItem(Eventtime, EventTitle,
+                                items.add(new ScheduleItem(Eventtime, EventTitle,
                                         typeEventId, getDate));
                             }
                         }
                     }
                 }
+
+                data[counter] = items.toArray(new ScheduleItem[0]);
             }
 
         } catch (Exception e) {
@@ -153,8 +152,7 @@ public class ScheduleMainActivity extends FragmentActivity {
 
         @Override
         public Fragment getItem(int position) {
-            // Log.e("#MA", position + "");
-            return ScheduleSlideFragment.create(position, mPager,data);
+            return ScheduleSlideFragment.create(position, mPager, data[position]);
         }
 
         @Override

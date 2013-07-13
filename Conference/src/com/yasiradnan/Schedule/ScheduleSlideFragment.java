@@ -15,6 +15,7 @@ package com.yasiradnan.Schedule;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,97 +41,53 @@ import android.widget.TextView;
 
 public class ScheduleSlideFragment extends Fragment {
 
-    final static String ARG_PAGE = "page";
+    final static String ARG_DATA = "data";
 
-    private static ViewPager pager;
-
-    private static int pageNumber;
-
-    final static int totalPages = ScheduleMainActivity.totalPages;
-
-    private static List<ScheduleItem>[] ScheduleInformation;
+    private ScheduleItem[] ScheduleInformation;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         ViewGroup rootView = (ViewGroup)inflater.inflate(R.layout.schedule, container, false);
-        /**
-         * Set header date 
-         */
-        ((TextView)rootView.findViewById(R.id.tvDay)).setText(ScheduleInformation[pageNumber].get(pageNumber).getDate().toString());
+
         final ListView list = (ListView)rootView.findViewById(R.id.list);
-        BinderData bindingData = new BinderData(this.getActivity(), ScheduleInformation[pageNumber]);
+        BinderData bindingData = new BinderData(this.getActivity(), ScheduleInformation);
         list.setAdapter(bindingData);
 
         list.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-                if (ScheduleInformation[pager.getCurrentItem()].get(position).getItemType() == 0
-                        || ScheduleInformation[pager.getCurrentItem()].get(position).getItemType() == 3
-                        || ScheduleInformation[pager.getCurrentItem()].get(position).getItemType() == 2)
+                ScheduleItem item = ScheduleInformation[position];
+
+                if (item.getItemType() == 0 || item.getItemType() == 3 || item.getItemType() == 2)
                     return;
+
                 Intent intent = new Intent(ScheduleSlideFragment.this.getActivity(),
                         ContentExtended.class);
-                intent.putExtra("title", ScheduleInformation[pager.getCurrentItem()].get(position).getTitle());
-                intent.putExtra("content", ScheduleInformation[pager.getCurrentItem()].get(position).getContent());
+                intent.putExtra("title", item.getTitle());
+                intent.putExtra("content", item.getContent());
                 startActivity(intent);
-            }
-        });
-
-        ImageButton ibLeft = (ImageButton)rootView.findViewById(R.id.ibLeft);
-        if (pageNumber == 0)
-            ibLeft.setVisibility(View.INVISIBLE);
-
-        else
-            ibLeft.setVisibility(View.VISIBLE);
-
-        ibLeft.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (pager.getCurrentItem() > 0)
-                    pager.setCurrentItem(pager.getCurrentItem() - 1, true);
-            }
-        });
-
-        ImageButton ibRight = (ImageButton)rootView.findViewById(R.id.ibRight);
-        if (pageNumber + 1 == totalPages)
-            ibRight.setVisibility(View.INVISIBLE);
-        else
-            ibRight.setVisibility(View.VISIBLE);
-
-        ibRight.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (pager.getCurrentItem() < totalPages)
-                    pager.setCurrentItem(pager.getCurrentItem() + 1, true);
             }
         });
 
         return rootView;
     }
 
-    public static Fragment create(int position) {
-        Fragment fragment = new ScheduleSlideFragment();
-        Bundle args = new Bundle();
-        args.putInt(ARG_PAGE, position);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    public static Fragment create(ScheduleItem[] data) {
 
-    public static Fragment create(int position, ViewPager _pager, List<ScheduleItem>[] data) {
-        pageNumber = position;
-        pager = _pager;
-        ScheduleInformation  = data;
         Fragment fragment = new ScheduleSlideFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_PAGE, position);
+        args.putSerializable(ARG_DATA, data);
         fragment.setArguments(args);
+
         return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.i("schedule", "onCreate()");
         super.onCreate(savedInstanceState);
-        pageNumber = getArguments().getInt(ARG_PAGE);
+        Serializable serializable = getArguments().getSerializable(ARG_DATA);
+        ScheduleInformation = (ScheduleItem[]) serializable;
     }
 
 }

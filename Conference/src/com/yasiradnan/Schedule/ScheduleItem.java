@@ -7,7 +7,9 @@
  * */
 package com.yasiradnan.Schedule;
 
-public class ScheduleItem {
+import java.io.Serializable;
+
+public class ScheduleItem implements Serializable {
 	private String time;
 	private String title;
 	private int itemType;

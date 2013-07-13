@@ -21,9 +21,9 @@ import android.widget.TextView;
 public class BinderData extends BaseAdapter {
 
 	private LayoutInflater inflater;
-	private List<ScheduleItem> items;
+	private ScheduleItem[] items;
 	
-	public BinderData(Activity act, List<ScheduleItem> _items) {
+	public BinderData(Activity act, ScheduleItem[] _items) {
 		inflater = (LayoutInflater) act.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		items = _items;
 	}
@@ -31,12 +31,12 @@ public class BinderData extends BaseAdapter {
 	@Override
 	public int getCount() {
 		// TODO Auto-generated method stub
-		return items.size();
+		return items.length;
 	}
 
 	@Override
 	public Object getItem(int arg0) {
-		return items.get(arg0).getTime();
+		return items[arg0].getTime();
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public class BinderData extends BaseAdapter {
 	public View getView(int arg0, View arg1, ViewGroup arg2) {
 		View vi = arg1;
 		ViewHolder holder = null;
-		ScheduleItem item = items.get(arg0);
+		ScheduleItem item = items[arg0];
 		
 		
 		switch(item.getItemType()) {
@@ -120,7 +120,7 @@ public class BinderData extends BaseAdapter {
 	@Override
 	public int getViewTypeCount() {
 		// TODO Auto-generated method stub
-		return items.size();
+		return items.length;
 	}
 
 	@Override
